@@ -1,0 +1,1162 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Temperature Monitoring Record</title>
+
+<style>
+:root {
+  --ink: #263238;
+  --accent: #765332;
+  --line: #c9b9a5;
+  --soft: #f4eee5;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: #f1f3f5;
+  color: var(--ink);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+header {
+  background: white;
+  padding: 18px 20px;
+  border-bottom: 1px solid #ddd;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 21px;
+  color: #473521;
+}
+
+header p {
+  margin: 5px 0 0;
+  color: #667085;
+  font-size: 13px;
+}
+
+main {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 0 14px 35px;
+}
+
+.panel {
+  background: white;
+  border: 1px solid #e2e5e9;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 8px #1822300a;
+}
+
+.designs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.design {
+  border: 1px solid #d4d8dd;
+  background: white;
+  border-radius: 9px;
+  padding: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.design strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.design small { color: #667085; }
+
+.design.active {
+  border: 2px solid var(--accent);
+  background: #fbf6ef;
+}
+
+.meta {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(130px, 1fr));
+  gap: 12px;
+}
+
+label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #475467;
+  margin-bottom: 5px;
+}
+
+input, select {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid #cfd4dc;
+  border-radius: 7px;
+  background: white;
+  font: 14px Arial;
+  color: #263238;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+button {
+  border: 0;
+  border-radius: 7px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary {
+  background: #765332;
+  color: white;
+}
+
+.secondary {
+  background: #edf0f2;
+  color: #263238;
+}
+
+.danger {
+  background: #fff0ee;
+  color: #a93226;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+#entryTable {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 820px;
+  background: white;
+  table-layout: fixed;
+}
+
+#entryTable th,
+#entryTable td {
+  border: 1px solid var(--line);
+  padding: 4px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+#entryTable th {
+  background: var(--soft);
+  color: #493a2c;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+#entryTable td input,
+#entryTable td select {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 7px 3px;
+  text-align: center;
+  background: transparent;
+  font: 12px Arial;
+  color: #263238;
+}
+
+#entryTable td input.food {
+  text-align: left;
+}
+
+#entryTable td select { cursor: pointer; }
+
+#entryTable td input:focus,
+#entryTable td select:focus {
+  outline: 1px solid #9a7958;
+  background: white;
+}
+
+.row-delete {
+  padding: 5px 8px;
+  background: #fff0ee;
+  color: #a93226;
+}
+
+.note {
+  font-size: 12px;
+  color: #667085;
+  margin: 10px 0 0;
+}
+
+#printArea { display: none; }
+
+/* A4 PRINT SETTINGS */
+
+@page portrait {
+  size: A4 portrait;
+  margin: 6mm;
+}
+
+@page landscape {
+  size: A4 landscape;
+  margin: 6mm;
+}
+
+@media print {
+
+  html, body {
+    width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    color: #111;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  header,
+  .no-print,
+  .row-delete-cell {
+    display: none !important;
+  }
+
+  main {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  #printArea {
+    display: block !important;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .print-sheet {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 1mm;
+    border: 1px solid #8b765f;
+    background: white;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-sheet.design1 { page: landscape; }
+
+  .print-sheet.design2,
+  .print-sheet.design3 { page: portrait; }
+
+  .print-head {
+    text-align: center;
+    border: 1px solid #8b765f;
+    padding: 2px;
+    margin-bottom: 3px;
+  }
+
+  .print-head h2 {
+    font-size: 11px;
+    margin: 0 0 2px;
+    letter-spacing: .3px;
+  }
+
+  .print-head p {
+    font-size: 7px;
+    margin: 1px;
+  }
+
+  .print-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 4px;
+    font-size: 7px;
+    margin: 2px 0 3px;
+    flex-wrap: wrap;
+  }
+
+  #printTable {
+    border-collapse: collapse;
+    width: 100%;
+    max-width: 100%;
+    table-layout: fixed;
+    background: white;
+  }
+
+  #printTable th,
+  #printTable td {
+    border: 1px solid #8b765f;
+    padding: 1px;
+    overflow-wrap: anywhere;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  #printTable th {
+    font-size: 6.5px;
+    line-height: 1.1;
+    background: #f7f2e9 !important;
+  }
+
+  #printTable td {
+    height: 6mm;
+    font-size: 7px;
+    line-height: 1.05;
+  }
+}
+
+@media(max-width:700px) {
+  header h1 { font-size: 18px; }
+
+  .designs { grid-template-columns: 1fr; }
+
+  .meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  main { margin: 12px auto; }
+
+  .panel { padding: 12px; }
+}
+
+@media(max-width:420px) {
+  .meta { grid-template-columns: 1fr; }
+  .actions button { flex: 1; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>Daily Temperature Monitoring Record</h1>
+  <p>
+    Time: 10:30am–9:30pm · Temperature: -15°C to +13°C · A4 printing
+  </p>
+</header>
+
+<main>
+
+  <section class="panel controls no-print">
+    <label>SELECT RECORD DESIGN</label>
+
+    <div class="designs">
+
+      <button class="design active" data-design="1" type="button">
+        <strong>1 — Cooking Temperature &amp; Time</strong>
+        <small>A4 landscape · start/end cooking details</small>
+      </button>
+
+      <button class="design" data-design="2" type="button">
+        <strong>2 — Baking Temperature Sheet</strong>
+        <small>A4 portrait · compact row layout</small>
+      </button>
+
+      <button class="design" data-design="3" type="button">
+        <strong>3 — Baking Temperature Sheet</strong>
+        <small>A4 portrait · wider comments layout</small>
+      </button>
+
+    </div>
+  </section>
+
+  <section class="panel meta-panel no-print">
+    <div class="meta">
+
+      <div>
+        <label for="recordDate">Record Date</label>
+        <input id="recordDate" type="date">
+      </div>
+
+      <div>
+        <label for="month">Month</label>
+        <input id="month" placeholder="e.g. November">
+      </div>
+
+      <div>
+        <label for="year">Year</label>
+        <input id="year" type="number" placeholder="2026">
+      </div>
+
+      <div>
+        <label for="section">Section / Area</label>
+        <input id="section" placeholder="Enter section">
+      </div>
+
+    </div>
+  </section>
+
+  <section class="panel no-print">
+
+    <div class="actions" style="margin-bottom:12px">
+
+      <button class="primary" id="addRow" type="button">
+        ＋ Add Record Row
+      </button>
+
+      <button class="secondary" id="saveBtn" type="button">
+        Save Record
+      </button>
+
+      <button class="secondary" id="printBtn" type="button">
+        Print A4
+      </button>
+
+      <button class="danger" id="clearBtn" type="button">
+        Clear Current Sheet
+      </button>
+
+    </div>
+
+    <div class="table-wrap">
+      <table id="entryTable"></table>
+    </div>
+
+    <p class="note">
+      Records are saved in this browser on this device.
+      Use the same browser/device to reopen them.
+    </p>
+
+  </section>
+
+  <section id="printArea">
+
+    <div class="print-sheet" id="printSheet">
+
+      <div class="print-head">
+        <h2 id="printTitle">COOKING TEMPERATURE &amp; TIME</h2>
+        <p>DAILY TEMPERATURE MONITORING RECORD</p>
+      </div>
+
+      <div class="print-meta">
+        <span>
+          Month: <b id="pMonth"></b>
+          &nbsp; Year: <b id="pYear"></b>
+        </span>
+
+        <span>
+          Record Date: <b id="pDate"></b>
+        </span>
+
+        <span>
+          Section: <b id="pSection"></b>
+        </span>
+      </div>
+
+      <table id="printTable"></table>
+
+    </div>
+
+  </section>
+
+</main>
+
+<script>
+"use strict";
+
+/* RECORD DESIGNS */
+
+const configs = {
+
+  1: {
+    title: "COOKING TEMPERATURE & TIME",
+
+    headers: [
+      "Date",
+      "Food Item",
+      "Start Cooking Time",
+      "Start Cooking Temp. (°C)",
+      "Time",
+      "Temp. (°C)",
+      "End Cooking Time",
+      "End Cooking Temp. (°C)",
+      "Corrective Action"
+    ],
+
+    fields: [
+      "date",
+      "food",
+      "startTime",
+      "startTemp",
+      "checkTime",
+      "checkTemp",
+      "endTime",
+      "endTemp",
+      "action"
+    ],
+
+    widths: [
+      "6%","14%","11%","11%","8%",
+      "8%","11%","11%","20%"
+    ]
+  },
+
+  2: {
+    title: "BAKING TEMPERATURE MONITORING SHEET",
+
+    headers: [
+      "Date",
+      "Time",
+      "Food Item / Name",
+      "Food Core Temp. (°C)",
+      "Comments"
+    ],
+
+    fields: [
+      "date",
+      "time",
+      "food",
+      "temp",
+      "comments"
+    ],
+
+    widths: [
+      "10%","12%","25%","19%","34%"
+    ]
+  },
+
+  3: {
+    title: "BAKING TEMPERATURE MONITORING SHEET",
+
+    headers: [
+      "Date",
+      "Time",
+      "Food Item / Name",
+      "Food Core Temp. (°C)",
+      "Comments / Corrective Action"
+    ],
+
+    fields: [
+      "date",
+      "time",
+      "food",
+      "temp",
+      "comments"
+    ],
+
+    widths: [
+      "8%","11%","23%","17%","41%"
+    ]
+  }
+
+};
+
+let design = 1;
+let rows = [];
+
+const $ = id => document.getElementById(id);
+
+
+/* CREATE EMPTY ROW */
+
+function blankRow(day = "") {
+
+  const row = Object.fromEntries(
+    configs[design].fields.map(field => [field, ""])
+  );
+
+  row.date = String(day);
+
+  return row;
+}
+
+
+/* CREATE 31 DAYS */
+
+function initialRows() {
+
+  return Array.from(
+    {length:31},
+    (_, i) => blankRow(i + 1)
+  );
+
+}
+
+
+/* HTML ESCAPE */
+
+function escapeHtml(value) {
+
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[char]));
+
+}
+
+
+/* TIME OPTIONS: 10:30AM TO 9:30PM */
+
+function getTimeOptions() {
+
+  const times = [];
+
+  for (
+    let minutes = 10 * 60 + 30;
+    minutes <= 21 * 60 + 30;
+    minutes += 30
+  ) {
+
+    const hour24 = Math.floor(minutes / 60);
+    const minute = minutes % 60;
+
+    const suffix = hour24 >= 12 ? "pm" : "am";
+    const hour12 = hour24 % 12 || 12;
+
+    times.push(
+      `${hour12}:${String(minute).padStart(2,"0")}${suffix}`
+    );
+
+  }
+
+  return times;
+
+}
+
+
+/* TEMPERATURE OPTIONS: -15 TO +13 */
+
+function getTemperatureOptions() {
+
+  return Array.from(
+    {length:29},
+    (_, i) => i - 15
+  );
+
+}
+
+
+/* INPUT FIELDS */
+
+function cellInput(field, value, index) {
+
+  const common =
+    `data-index="${index}" data-field="${field}" aria-label="${field}"`;
+
+  /* TIME DROPDOWN */
+
+  if (field.toLowerCase().includes("time")) {
+
+    return `
+      <select ${common}>
+        <option value="">Select time</option>
+
+        ${getTimeOptions().map(time => `
+          <option value="${time}"
+            ${String(value) === time ? "selected" : ""}>
+            ${time}
+          </option>
+        `).join("")}
+
+      </select>
+    `;
+
+  }
+
+  /* TEMPERATURE DROPDOWN */
+
+  if (field.toLowerCase().includes("temp")) {
+
+    return `
+      <select ${common}>
+        <option value="">Select °C</option>
+
+        ${getTemperatureOptions().map(temp => {
+
+          const label =
+            temp > 0 ? `+${temp}°C` : `${temp}°C`;
+
+          return `
+            <option value="${temp}"
+              ${String(value) === String(temp) ? "selected" : ""}>
+              ${label}
+            </option>
+          `;
+
+        }).join("")}
+
+      </select>
+    `;
+
+  }
+
+  /* DATE DROPDOWN: 1 TO 31 */
+
+  if (field === "date") {
+
+    return `
+      <select ${common}>
+        <option value="">Date</option>
+
+        ${Array.from({length:31}, (_, i) => i + 1).map(day => `
+          <option value="${day}"
+            ${String(value) === String(day) ? "selected" : ""}>
+            ${day}
+          </option>
+        `).join("")}
+
+      </select>
+    `;
+
+  }
+
+  /* OTHER INPUTS */
+
+  const placeholder = field === "food" ? "Food item" : "";
+  const foodClass = field === "food" ? "food" : "";
+
+  return `
+    <input
+      type="text"
+      class="${foodClass}"
+      ${common}
+      value="${escapeHtml(value)}"
+      placeholder="${placeholder}">
+  `;
+
+}
+
+
+/* STORAGE KEY */
+
+function storageKey() {
+
+  return "dailyTempRecord_v2_design_" + design;
+
+}
+
+
+/* DEFAULT DETAILS */
+
+function setDefaults() {
+
+  const now = new Date();
+
+  $("recordDate").value =
+    now.getFullYear() + "-" +
+    String(now.getMonth()+1).padStart(2,"0") + "-" +
+    String(now.getDate()).padStart(2,"0");
+
+  $("month").value =
+    now.toLocaleString("en", {month:"long"});
+
+  $("year").value = now.getFullYear();
+
+}
+
+
+/* KEEP 31 ROWS WHEN LOADING */
+
+function normalizeRows(savedRows) {
+
+  const result = initialRows();
+
+  if (Array.isArray(savedRows)) {
+
+    savedRows.forEach((saved, index) => {
+
+      if (index < 31 && saved && typeof saved === "object") {
+
+        result[index] = {
+          ...result[index],
+          ...saved,
+          date: String(index + 1)
+        };
+
+      }
+
+    });
+
+  }
+
+  return result;
+
+}
+
+
+/* RENDER TABLE */
+
+function render() {
+
+  const config = configs[design];
+
+  $("entryTable").innerHTML = `
+
+    <colgroup>
+
+      ${config.widths.map(width =>
+        `<col style="width:${width}">`
+      ).join("")}
+
+      <col style="width:54px">
+
+    </colgroup>
+
+    <thead>
+      <tr>
+
+        ${config.headers.map(header =>
+          `<th>${escapeHtml(header)}</th>`
+        ).join("")}
+
+        <th class="row-delete-cell">Remove</th>
+
+      </tr>
+    </thead>
+
+    <tbody>
+
+      ${rows.map((row, index) => `
+
+        <tr>
+
+          ${config.fields.map(field =>
+            `<td>${cellInput(field, row[field], index)}</td>`
+          ).join("")}
+
+          <td class="row-delete-cell">
+
+            <button
+              class="row-delete"
+              data-remove="${index}"
+              type="button"
+              aria-label="Remove row ${index+1}">
+              ×
+            </button>
+
+          </td>
+
+        </tr>
+
+      `).join("")}
+
+    </tbody>
+
+  `;
+
+
+  /* UPDATE INPUTS AND DROPDOWNS */
+
+  $("entryTable").querySelectorAll("input,select")
+    .forEach(element => {
+
+      const update = () => {
+
+        const index = Number(element.dataset.index);
+        const field = element.dataset.field;
+
+        if (rows[index]) {
+
+          rows[index][field] = element.value;
+          saveLocal(false);
+
+        }
+
+      };
+
+      element.addEventListener("input", update);
+      element.addEventListener("change", update);
+
+    });
+
+
+  /* REMOVE ROW */
+
+  $("entryTable").querySelectorAll("[data-remove]")
+    .forEach(button => {
+
+      button.addEventListener("click", () => {
+
+        rows.splice(Number(button.dataset.remove), 1);
+
+        render();
+        saveLocal(false);
+
+      });
+
+    });
+
+}
+
+
+/* LOAD SAVED RECORD */
+
+function loadLocal() {
+
+  rows = initialRows();
+
+  try {
+
+    const raw = localStorage.getItem(storageKey());
+
+    if (!raw) return;
+
+    const data = JSON.parse(raw);
+
+    rows = normalizeRows(data.rows);
+
+    if (data.meta) {
+
+      $("recordDate").value =
+        data.meta.date || $("recordDate").value;
+
+      $("month").value = data.meta.month || "";
+      $("year").value = data.meta.year || "";
+      $("section").value = data.meta.section || "";
+
+    }
+
+  } catch (error) {
+
+    console.warn("Could not load saved record:", error);
+
+  }
+
+}
+
+
+/* SAVE RECORD */
+
+function saveLocal(showMessage = true) {
+
+  const data = {
+
+    rows,
+
+    meta: {
+
+      date: $("recordDate").value,
+      month: $("month").value,
+      year: $("year").value,
+      section: $("section").value
+
+    }
+
+  };
+
+  try {
+
+    localStorage.setItem(
+      storageKey(),
+      JSON.stringify(data)
+    );
+
+    if (showMessage) {
+      alert("Record saved on this device.");
+    }
+
+  } catch (error) {
+
+    if (showMessage) {
+      alert("Unable to save. Check your browser storage settings.");
+    }
+
+  }
+
+}
+
+
+/* CHANGE DESIGN */
+
+function changeDesign(number) {
+
+  design = Number(number);
+
+  document.querySelectorAll(".design").forEach(button => {
+
+    button.classList.toggle(
+      "active",
+      Number(button.dataset.design) === design
+    );
+
+  });
+
+  loadLocal();
+  render();
+
+}
+
+
+/* PRINT A4 */
+
+function printSheet() {
+
+  saveLocal(false);
+
+  const config = configs[design];
+
+  $("printTitle").textContent = config.title;
+
+  $("pMonth").textContent = $("month").value;
+  $("pYear").textContent = $("year").value;
+  $("pDate").textContent = $("recordDate").value;
+  $("pSection").textContent = $("section").value;
+
+
+  /* CREATE PRINT TABLE */
+
+  $("printTable").innerHTML = `
+
+    <colgroup>
+
+      ${config.widths.map(width =>
+        `<col style="width:${width}">`
+      ).join("")}
+
+    </colgroup>
+
+    <thead>
+      <tr>
+
+        ${config.headers.map(header =>
+          `<th>${escapeHtml(header)}</th>`
+        ).join("")}
+
+      </tr>
+    </thead>
+
+    <tbody>
+
+      ${rows.map(row => `
+
+        <tr>
+
+          ${config.fields.map(field =>
+            `<td>${escapeHtml(row[field] || "")}</td>`
+          ).join("")}
+
+        </tr>
+
+      `).join("")}
+
+    </tbody>
+
+  `;
+
+
+  /* APPLY SELECTED DESIGN */
+
+  $("printSheet").className =
+    "print-sheet design" + design;
+
+  $("printArea").style.display = "block";
+
+  window.print();
+
+}
+
+
+/* HIDE PRINT AREA AFTER PRINTING */
+
+window.addEventListener("afterprint", () => {
+
+  $("printArea").style.display = "none";
+
+});
+
+
+/* DESIGN BUTTONS */
+
+document.querySelectorAll(".design").forEach(button => {
+
+  button.addEventListener("click", () => {
+
+    changeDesign(button.dataset.design);
+
+  });
+
+});
+
+
+/* ADD ROW */
+
+$("addRow").addEventListener("click", () => {
+
+  rows.push(blankRow());
+
+  render();
+  saveLocal(false);
+
+});
+
+
+/* SAVE BUTTON */
+
+$("saveBtn").addEventListener("click", () => {
+
+  saveLocal(true);
+
+});
+
+
+/* PRINT BUTTON */
+
+$("printBtn").addEventListener("click", () => {
+
+  printSheet();
+
+});
+
+
+/* CLEAR CURRENT SHEET */
+
+$("clearBtn").addEventListener("click", () => {
+
+  if (!confirm("Clear all rows and details for this design?")) {
+    return;
+  }
+
+  rows = initialRows();
+
+  $("section").value = "";
+
+  render();
+
+  localStorage.removeItem(storageKey());
+
+  saveLocal(false);
+
+});
+
+
+/* SAVE DETAILS AUTOMATICALLY */
+
+["recordDate","month","year","section"].forEach(id => {
+
+  $(id).addEventListener("input", () => saveLocal(false));
+  $(id).addEventListener("change", () => saveLocal(false));
+
+});
+
+
+/* INITIALIZE */
+
+setDefaults();
+changeDesign(1);
+
+</script>
+
+</body>
+</html>
